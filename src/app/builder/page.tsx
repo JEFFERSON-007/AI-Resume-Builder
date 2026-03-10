@@ -12,6 +12,7 @@ import ProjectsForm from "@/components/builder/forms/ProjectsForm";
 import { useState } from "react";
 import { User, FileText, Briefcase, GraduationCap, Cpu, FolderGit2, Wand2, Download, Check, Home, Layout } from "lucide-react";
 import AiAssistant from "@/components/builder/AiAssistant";
+import AtsScoreCard from "@/components/builder/AtsScoreCard";
 import { useResumeStore } from "@/lib/store";
 import { AI_PROMPTS } from "@/lib/ai-prompts";
 import { exportToPdf } from "@/utils/export";
@@ -33,43 +34,45 @@ export default function BuilderPage() {
     const { resumeData, updateSummary, updateExperience } = useResumeStore();
 
     const handleAiAction = async (action: string) => {
+        // Always get the latest state from the store to avoid stale closures
+        const currentData = useResumeStore.getState().resumeData;
         setIsAiLoading(true);
         try {
             let prompt = "";
             let type = "text";
 
             if (action === "summary") {
-                if (!resumeData.personalInfo.jobTitle) {
+                if (!currentData.personalInfo.jobTitle) {
                     alert("Please enter a Job Title in the Personal section first so the AI knows what to write about!");
                     setIsAiLoading(false);
                     return;
                 }
-                const experienceText = resumeData.experience.map(e => e.description).join(". ");
-                prompt = AI_PROMPTS.summary(resumeData.personalInfo.jobTitle, experienceText);
+                const experienceText = currentData.experience.map(e => e.description).join(". ");
+                prompt = AI_PROMPTS.summary(currentData.personalInfo.jobTitle, experienceText);
             } else if (action === "bullets") {
-                const recentExp = resumeData.experience[0];
+                const recentExp = currentData.experience[0];
                 if (!recentExp || !recentExp.description) {
-                    alert("Please add an experience entry with a description first to use 'Impact Bullets'.");
+                    alert("Please add an experience entry with a description first to use 'Impact Bullet points'.");
                     setIsAiLoading(false);
                     return;
                 }
                 prompt = AI_PROMPTS.improveBullet(recentExp.description);
             } else if (action === "keywords" || action === "scoring") {
-                if (!resumeData.personalInfo.jobTitle) {
+                if (!currentData.personalInfo.jobTitle) {
                     alert("Please enter a Job Title first for accurate scoring and optimization.");
                     setIsAiLoading(false);
                     return;
                 }
-                if (resumeData.experience.length === 0) {
+                if (currentData.experience.length === 0) {
                     alert("Please add at least one experience entry to calculate a professional score.");
                     setIsAiLoading(false);
                     return;
                 }
 
                 const fullContent = `
-                    Role: ${resumeData.personalInfo.jobTitle}
-                    Experience: ${resumeData.experience.map(e => `${e.position} at ${e.company}: ${e.description}`).join("\n")}
-                    Skills: ${resumeData.skills.map(s => s.name).join(", ")}
+                    Role: ${currentData.personalInfo.jobTitle}
+                    Experience: ${currentData.experience.map(e => `${e.position} at ${e.company}: ${e.description}`).join("\n")}
+                    Skills: ${currentData.skills.map(s => s.name).join(", ")}
                 `;
                 prompt = action === "scoring" ? AI_PROMPTS.score(fullContent) : AI_PROMPTS.tailor("modern tech industry standards", fullContent);
                 type = "json";
@@ -240,6 +243,7 @@ export default function BuilderPage() {
                             <Check className="w-4 h-4" /> Live Preview
                         </span>
                     </div>
+                    <AtsScoreCard />
                 </div>
                 <ResumePreview />
             </div>
