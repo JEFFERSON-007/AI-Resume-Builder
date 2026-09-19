@@ -1,127 +1,168 @@
 "use client";
 
-import { useResumeStore } from "@/lib/store";
-import { Plus, Trash2, ChevronDown, ChevronUp, Link as LinkIcon, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { useResumeStore } from "@/lib/store";
+import { Plus, Trash2, ChevronDown, ChevronUp, FolderGit2, ExternalLink, Github } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProjectsForm() {
-    const { projects, addProject, updateProject, removeProject, setAiOpen } = useResumeStore((state) => ({
-        projects: state.resumeData.projects,
-        addProject: state.addProject,
-        updateProject: state.updateProject,
-        removeProject: state.removeProject,
-        setAiOpen: state.setAiOpen,
-    }));
+    const projects = useResumeStore((state) => state.resumeData.projects);
+    const addProject = useResumeStore((state) => state.addProject);
+    const updateProject = useResumeStore((state) => state.updateProject);
+    const removeProject = useResumeStore((state) => state.removeProject);
 
     const [expandedId, setExpandedId] = useState<string | null>(projects[0]?.id || null);
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Key Projects</label>
+        <div className="space-y-5 text-left">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <FolderGit2 className="w-4 h-4 text-blue-400" /> Key Projects & Open Source
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                        Demonstrate applied engineering, product delivery, and technical depth
+                    </p>
+                </div>
                 <button
                     onClick={addProject}
-                    className="flex items-center gap-1.5 text-[10px] font-bold text-blue-400 bg-blue-400/10 border border-blue-400/20 px-2.5 py-1 rounded-full hover:bg-blue-400/20 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-xl hover:bg-blue-500/20 transition-all shadow-sm"
                 >
-                    <Plus className="w-3 h-3" />
-                    ADD PROJECT
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Project
                 </button>
             </div>
 
-            <div className="space-y-4">
-                {projects.map((proj, index) => (
-                    <motion.div
-                        key={proj.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="glass-dark rounded-xl overflow-hidden border border-white/5"
-                    >
+            <div className="space-y-3">
+                {projects.map((proj, index) => {
+                    const isExpanded = expandedId === proj.id;
+
+                    return (
                         <div
-                            className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
-                            onClick={() => setExpandedId(expandedId === proj.id ? null : proj.id)}
+                            key={proj.id}
+                            className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden transition-all"
                         >
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-xs">
-                                    {index + 1}
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-semibold text-white">
-                                        {proj.name || "New Project"}
-                                    </h3>
-                                    {proj.link && <p className="text-[10px] text-blue-400 truncate w-40">{proj.link}</p>}
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); removeProject(proj.id); }}
-                                    className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                {expandedId === proj.id ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                            </div>
-                        </div>
-
-                        <AnimatePresence>
-                            {expandedId === proj.id && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="px-4 pb-4 space-y-4 overflow-hidden"
-                                >
-                                    <div className="grid grid-cols-1 gap-4 pt-2">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] text-gray-500 uppercase tracking-tighter">Project Name</label>
-                                            <input
-                                                type="text"
-                                                value={proj.name}
-                                                onChange={(e) => updateProject(proj.id, { name: e.target.value })}
-                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
-                                            />
-                                        </div>
+                            <div
+                                className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 transition-colors"
+                                onClick={() => setExpandedId(isExpanded ? null : proj.id)}
+                            >
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 font-bold text-xs flex items-center justify-center shrink-0">
+                                        {index + 1}
                                     </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-xs font-bold text-white truncate">
+                                            {proj.name || "Untitled Project"}
+                                        </h4>
+                                        <p className="text-[11px] text-slate-400 truncate">
+                                            {(proj.technologies || []).join(", ") || "No technologies tagged"}
+                                        </p>
+                                    </div>
+                                </div>
 
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] text-gray-500 uppercase tracking-tighter">Project Link / URL</label>
-                                        <div className="relative">
-                                            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                                                <LinkIcon className="w-3 h-3 text-gray-500" />
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeProject(proj.id);
+                                        }}
+                                        className="p-1 text-slate-500 hover:text-rose-400"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <div className="p-1 text-slate-500">
+                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <AnimatePresence>
+                                {isExpanded && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="px-4 pb-4 pt-2 border-t border-slate-800/80 space-y-3.5"
+                                    >
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1">
+                                                    Project Name *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={proj.name}
+                                                    onChange={(e) => updateProject(proj.id, { name: e.target.value })}
+                                                    placeholder="Real-Time Task Queue"
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                                                />
                                             </div>
-                                            <input
-                                                type="text"
-                                                value={proj.link}
-                                                onChange={(e) => updateProject(proj.id, { link: e.target.value })}
-                                                placeholder="https://github.com/..."
-                                                className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1">
+                                                    Technologies (Comma-separated)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={(proj.technologies || []).join(", ")}
+                                                    onChange={(e) =>
+                                                        updateProject(proj.id, {
+                                                            technologies: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                                                        })
+                                                    }
+                                                    placeholder="Go, Redis, Docker, gRPC"
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1 flex items-center gap-1">
+                                                    <ExternalLink className="w-3 h-3 text-blue-400" /> Demo / Live URL
+                                                </label>
+                                                <input
+                                                    type="url"
+                                                    value={proj.link || ""}
+                                                    onChange={(e) => updateProject(proj.id, { link: e.target.value })}
+                                                    placeholder="https://myproject.app"
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1 flex items-center gap-1">
+                                                    <Github className="w-3 h-3 text-purple-400" /> GitHub Repository URL
+                                                </label>
+                                                <input
+                                                    type="url"
+                                                    value={proj.githubUrl || ""}
+                                                    onChange={(e) => updateProject(proj.id, { githubUrl: e.target.value })}
+                                                    placeholder="https://github.com/myusername/project"
+                                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1">
+                                                Description & Technical Impact
+                                            </label>
+                                            <textarea
+                                                value={proj.description}
+                                                onChange={(e) => updateProject(proj.id, { description: e.target.value })}
+                                                placeholder="Engineered a fault-tolerant distributed queue handling 50,000 concurrent jobs..."
+                                                rows={3}
+                                                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 leading-relaxed"
                                             />
                                         </div>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <label className="text-[10px] text-gray-500 uppercase tracking-tighter">Description</label>
-                                            <button
-                                                onClick={() => setAiOpen(true)}
-                                                className="flex items-center gap-1 text-[8px] font-bold text-blue-400 hover:text-blue-300 transition-colors"
-                                            >
-                                                <Sparkles className="w-2 h-2" />
-                                                IMPROVE WITH AI
-                                            </button>
-                                        </div>
-                                        <textarea
-                                            value={proj.description}
-                                            onChange={(e) => updateProject(proj.id, { description: e.target.value })}
-                                            rows={3}
-                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 resize-none leading-relaxed"
-                                        />
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-                ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

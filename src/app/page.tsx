@@ -43,11 +43,11 @@ export default function LandingPage() {
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-4">
-                        <Link href="/templates">
+                        <Link href="/builder">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold flex items-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+                                className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold flex items-center gap-2 shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:bg-blue-500 transition-colors"
                             >
                                 Build Your Resume <ArrowRight className="w-5 h-5" />
                             </motion.button>
@@ -56,7 +56,7 @@ export default function LandingPage() {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-semibold backdrop-blur-md"
+                                className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-semibold backdrop-blur-md hover:bg-white/10 transition-colors"
                             >
                                 View Templates
                             </motion.button>
@@ -70,7 +70,7 @@ export default function LandingPage() {
                     transition={{ delay: 0.4, duration: 1 }}
                     className="mt-20 relative"
                 >
-                    <div className="glass-dark rounded-2xl p-4 md:p-8 max-w-5xl mx-auto transform perspective-1000 rotate-x-6 border border-white/10">
+                    <div className="glass-dark rounded-2xl p-4 md:p-8 max-w-5xl mx-auto transform perspective-1000 rotate-x-6 border border-white/10 shadow-2xl">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
@@ -95,12 +95,14 @@ export default function LandingPage() {
                                 { label: "Keywords", icon: Search, color: "text-purple-400" },
                                 { label: "Resume Score", icon: Palette, color: "text-orange-400" },
                             ].map((opt, i) => (
-                                <div key={i} className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-colors">
-                                    <div className={`p-2 rounded-lg bg-black/20 ${opt.color}`}>
-                                        <opt.icon className="w-4 h-4" />
+                                <Link key={i} href="/builder">
+                                    <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-colors cursor-pointer">
+                                        <div className={`p-2 rounded-lg bg-black/20 ${opt.color}`}>
+                                            <opt.icon className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-xs font-semibold text-gray-300">{opt.label}</span>
                                     </div>
-                                    <span className="text-xs font-semibold text-gray-300">{opt.label}</span>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>

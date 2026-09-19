@@ -1,0 +1,311 @@
+import { ResumeData } from "@/types/resume";
+
+export const DEFAULT_PAGE_SETTINGS = {
+    format: "A4" as const,
+    width: 210,
+    height: 297,
+    margins: 36,
+    marginSize: "standard" as const,
+    fontFamily: "Inter" as const,
+    fontScale: 100,
+    lineHeight: "normal" as const,
+    cropToContent: false,
+};
+
+export const INITIAL_SECTION_ORDER: ResumeData["sectionOrder"] = [
+    "personal",
+    "summary",
+    "experience",
+    "skills",
+    "projects",
+    "education",
+    "certifications",
+    "achievements",
+    "languages",
+    "volunteering",
+    "publications",
+    "custom",
+];
+
+export const SAMPLE_RESUMES: Record<string, ResumeData> = {
+    "software-engineer": {
+        id: "software-engineer",
+        title: "Software Engineering Lead",
+        targetRole: "Senior Full Stack Engineer",
+        createdAt: "2026-01-15T09:00:00Z",
+        updatedAt: "2026-03-10T14:30:00Z",
+        personalInfo: {
+            fullName: "Alex Morgan",
+            jobTitle: "Senior Full Stack Engineer",
+            email: "alex.morgan.dev@example.com",
+            phone: "+1 (555) 234-5678",
+            location: "San Francisco, CA",
+            website: "https://alexmorgandev.example.io",
+            linkedin: "https://linkedin.com/in/alexmorgan-example",
+            github: "https://github.com/alexmorgan-example",
+            portfolio: "https://alexmorgan.design",
+            profilePhoto: "",
+        },
+        summary:
+            "Results-driven Senior Full Stack Engineer with 7+ years of experience architecting high-throughput distributed microservices, scalable React/TypeScript web apps, and automated CI/CD pipelines. Proven track record of reducing p99 API latency by 35% and mentoring engineering squads across fast-paced environments.",
+        experience: [
+            {
+                id: "exp-1",
+                company: "CloudScale Systems",
+                position: "Senior Software Engineer",
+                location: "San Francisco, CA",
+                startDate: "2022-03",
+                endDate: "Present",
+                current: true,
+                description:
+                    "Spearheaded the redesign of the core billing and ingestion engine serving 4.5M daily active users. Architected event-driven microservices using Node.js, Go, and Kafka.",
+                achievements: [
+                    "Decreased p99 response times from 420ms to 180ms through Redis caching and query plan indexing.",
+                    "Designed zero-downtime database migration tooling for multi-tenant Postgres schemas.",
+                    "Mentored 6 junior and mid-level engineers in distributed systems design and TDD practices.",
+                ],
+            },
+            {
+                id: "exp-2",
+                company: "Nexus Digital Labs",
+                position: "Full Stack Engineer",
+                location: "Seattle, WA",
+                startDate: "2019-06",
+                endDate: "2022-02",
+                current: false,
+                description:
+                    "Built client-facing analytics dashboards using Next.js, TypeScript, and Tailwind CSS. Implemented OAuth 2.0 authentication and automated end-to-end testing pipelines.",
+                achievements: [
+                    "Delivered real-time telemetry charting using WebSockets and Canvas, handling 15,000 events/sec.",
+                    "Improved Lighthouse performance scores from 64 to 98 across 12 core landing pages.",
+                ],
+            },
+        ],
+        education: [
+            {
+                id: "edu-1",
+                school: "University of Washington",
+                degree: "Bachelor of Science",
+                field: "Computer Science",
+                location: "Seattle, WA",
+                startDate: "2015-09",
+                endDate: "2019-05",
+                current: false,
+                gpa: "3.85 / 4.0",
+                coursework: [
+                    "Distributed Systems",
+                    "Database Internals",
+                    "Computer Networks",
+                    "Algorithm Design",
+                ],
+            },
+        ],
+        skills: [
+            { id: "sk-1", name: "TypeScript", category: "languages", level: "Expert" },
+            { id: "sk-2", name: "React / Next.js", category: "frameworks", level: "Expert" },
+            { id: "sk-3", name: "Node.js", category: "technical", level: "Expert" },
+            { id: "sk-4", name: "Go", category: "languages", level: "Advanced" },
+            { id: "sk-5", name: "PostgreSQL", category: "databases", level: "Advanced" },
+            { id: "sk-6", name: "Redis", category: "databases", level: "Advanced" },
+            { id: "sk-7", name: "Docker & Kubernetes", category: "cloud", level: "Advanced" },
+            { id: "sk-8", name: "AWS (ECS, Lambda, S3)", category: "cloud", level: "Advanced" },
+            { id: "sk-9", name: "GraphQL & REST", category: "technical", level: "Expert" },
+            { id: "sk-10", name: "CI/CD & GitHub Actions", category: "tools", level: "Advanced" },
+            { id: "sk-11", name: "System Architecture", category: "softSkills", level: "Expert" },
+        ],
+        projects: [
+            {
+                id: "proj-1",
+                name: "Distributed Task Scheduler",
+                description:
+                    "Lightweight fault-tolerant distributed job queue engine built with Go and Redis Raft consensus.",
+                technologies: ["Go", "Redis", "Docker", "gRPC"],
+                link: "https://github.com/alexmorgan-example/task-queue",
+                githubUrl: "https://github.com/alexmorgan-example/task-queue",
+                achievements: [
+                    "Handles 50,000 concurrent jobs with dead-letter queue recovery and exponential backoff retry.",
+                ],
+            },
+            {
+                id: "proj-2",
+                name: "Real-Time Collaborative Markdown Studio",
+                description:
+                    "Web-based collaborative document editor powered by CRDTs, WebRTC, and Next.js.",
+                technologies: ["Next.js", "TypeScript", "Yjs", "WebRTC", "Tailwind CSS"],
+                link: "https://markdown-collab.example.app",
+                githubUrl: "https://github.com/alexmorgan-example/collab-studio",
+            },
+        ],
+        certifications: [
+            {
+                id: "cert-1",
+                name: "AWS Certified Solutions Architect – Professional",
+                issuer: "Amazon Web Services",
+                date: "2024-04",
+                credentialId: "AWS-PSA-991204",
+                url: "https://aws.amazon.com/verification",
+            },
+            {
+                id: "cert-2",
+                name: "Certified Kubernetes Administrator (CKA)",
+                issuer: "Cloud Native Computing Foundation",
+                date: "2023-11",
+                credentialId: "CKA-2384910",
+            },
+        ],
+        achievements: [
+            {
+                id: "ach-1",
+                title: "1st Place – Global Cloud Innovation Hackathon",
+                description:
+                    "Built an automated carbon-footprint optimizer for multi-region cloud workloads.",
+                date: "2023-10",
+            },
+        ],
+        publications: [],
+        volunteering: [
+            {
+                id: "vol-1",
+                organization: "Code For Community",
+                role: "Volunteer Programming Mentor",
+                startDate: "2021-01",
+                endDate: "Present",
+                current: true,
+                description:
+                    "Teach weekly introductory Python and web development courses to underserved high school students.",
+            },
+        ],
+        languages: [
+            { id: "lang-1", language: "English", proficiency: "Native" },
+            { id: "lang-2", language: "Spanish", proficiency: "Conversational" },
+        ],
+        customSections: [],
+        sectionOrder: INITIAL_SECTION_ORDER,
+        hiddenSections: ["publications", "custom"],
+        templateId: "ats-midnight",
+        pageSettings: DEFAULT_PAGE_SETTINGS,
+    },
+    "cybersecurity": {
+        id: "cybersecurity",
+        title: "Cybersecurity Analyst",
+        targetRole: "Cybersecurity & Incident Response Analyst",
+        createdAt: "2026-02-01T10:00:00Z",
+        updatedAt: "2026-03-12T11:20:00Z",
+        personalInfo: {
+            fullName: "Jordan Hayes",
+            jobTitle: "Information Security Analyst",
+            email: "jordan.hayes.sec@example.com",
+            phone: "+1 (555) 789-0123",
+            location: "Austin, TX",
+            linkedin: "https://linkedin.com/in/jordanhayes-example",
+            github: "https://github.com/jordanhayes-sec",
+        },
+        summary:
+            "Certified Information Security Analyst with 5+ years of experience safeguarding enterprise infrastructure, leading threat hunting investigations, and configuring SIEM/EDR platforms. Adept in NIST framework compliance, SOC 2 Type II audits, and vulnerability mitigation.",
+        experience: [
+            {
+                id: "exp-sec-1",
+                company: "Vanguard Cyber Defense",
+                position: "Senior Security Operations Analyst",
+                location: "Austin, TX",
+                startDate: "2022-01",
+                endDate: "Present",
+                current: true,
+                description:
+                    "Monitor and triage Tier-3 security alerts across 12,000 corporate endpoints. Lead digital forensics and root-cause post-mortem analyses.",
+                achievements: [
+                    "Decreased Mean Time to Detect (MTTD) by 42% through custom Splunk correlation searches and SOAR playbooks.",
+                    "Hardened Linux and AWS environments against credential-stuffing and lateral movement tactics.",
+                ],
+            },
+        ],
+        education: [
+            {
+                id: "edu-sec-1",
+                school: "Texas A&M University",
+                degree: "Bachelor of Science",
+                field: "Cybersecurity & Information Assurance",
+                startDate: "2016-09",
+                endDate: "2020-05",
+                current: false,
+            },
+        ],
+        skills: [
+            { id: "sk-s1", name: "SIEM (Splunk, Elastic)", category: "tools", level: "Expert" },
+            { id: "sk-s2", name: "Incident Response", category: "technical", level: "Expert" },
+            { id: "sk-s3", name: "Threat Hunting & MITRE ATT&CK", category: "technical", level: "Advanced" },
+            { id: "sk-s4", name: "Network Security (Wireshark)", category: "technical", level: "Advanced" },
+            { id: "sk-s5", name: "Python Scripting", category: "languages", level: "Advanced" },
+            { id: "sk-s6", name: "NIST & SOC 2 Compliance", category: "other", level: "Expert" },
+        ],
+        projects: [
+            {
+                id: "proj-s1",
+                name: "Automated IOC Extractor & Scanner",
+                description:
+                    "Open-source Python tool integrating VirusTotal and AlienVault OTX to evaluate anomalous network traffic logs.",
+                technologies: ["Python", "Docker", "REST APIs"],
+                githubUrl: "https://github.com/jordanhayes-sec/ioc-scanner",
+            },
+        ],
+        certifications: [
+            {
+                id: "cert-s1",
+                name: "CompTIA Security+",
+                issuer: "CompTIA",
+                date: "2020-08",
+            },
+            {
+                id: "cert-s2",
+                name: "Certified Information Systems Security Professional (CISSP)",
+                issuer: "ISC2",
+                date: "2023-05",
+            },
+        ],
+        achievements: [],
+        publications: [],
+        volunteering: [],
+        languages: [
+            { id: "lang-s1", language: "English", proficiency: "Native" },
+        ],
+        customSections: [],
+        sectionOrder: INITIAL_SECTION_ORDER,
+        hiddenSections: ["achievements", "publications", "volunteering", "custom"],
+        templateId: "technical-slate",
+        pageSettings: DEFAULT_PAGE_SETTINGS,
+    },
+};
+
+export const createEmptyResume = (id = "resume-" + Date.now(), title = "Untitled Resume"): ResumeData => ({
+    id,
+    title,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    personalInfo: {
+        fullName: "",
+        jobTitle: "",
+        email: "",
+        phone: "",
+        location: "",
+        website: "",
+        linkedin: "",
+        github: "",
+        portfolio: "",
+        profilePhoto: "",
+    },
+    summary: "",
+    experience: [],
+    education: [],
+    skills: [],
+    projects: [],
+    certifications: [],
+    achievements: [],
+    publications: [],
+    volunteering: [],
+    languages: [],
+    customSections: [],
+    sectionOrder: [...INITIAL_SECTION_ORDER],
+    hiddenSections: [],
+    templateId: "ats-midnight",
+    pageSettings: { ...DEFAULT_PAGE_SETTINGS },
+});

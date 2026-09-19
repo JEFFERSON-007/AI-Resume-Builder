@@ -70,8 +70,8 @@ const templates = layouts.flatMap((layout) =>
         id: `${layout.id}-${theme.id}`,
         name: `${layout.name} - ${theme.name}`,
         description: layout.desc,
-        image: layoutLocalImages[layout.id], // Use local as primary for reliability
-        externalImage: `https://images.unsplash.com/photo-${layoutImages[layout.id]}?auto=format&fit=crop&q=80&w=1000`,
+        image: layoutLocalImages[layout.id] || `/templates/modern-dynamic.png`,
+        externalImage: `https://images.unsplash.com/photo-${layoutImages[layout.id] || "1586281380349-6325f6db3d14"}?auto=format&fit=crop&q=80&w=1000`,
         themeColor: theme.color,
         tags: [layout.id.toUpperCase(), theme.name.toUpperCase()],
     }))
@@ -95,47 +95,24 @@ export default function TemplateSelection() {
         router.push("/builder");
     };
 
-    // Scroll to move functionality
-    const [isScrolling, setIsScrolling] = useState(false);
-
-    useEffect(() => {
-        const handleWheel = (e: WheelEvent) => {
-            if (isScrolling) return;
-
-            if (Math.abs(e.deltaY) > 50) {
-                setIsScrolling(true);
-                if (e.deltaY > 0) {
-                    handleNext();
-                } else {
-                    handlePrev();
-                }
-
-                // Debounce scrolling
-                setTimeout(() => {
-                    setIsScrolling(false);
-                }, 800);
-            }
-        };
-
-        window.addEventListener("wheel", handleWheel, { passive: true });
-        return () => window.removeEventListener("wheel", handleWheel);
-    }, [currentIndex, isScrolling, templates.length]);
-
     return (
         <div className="min-h-screen pt-20 px-4 flex flex-col items-center">
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-16"
+                className="text-center mb-12"
             >
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                     Choose Your Canvas
                 </h1>
                 <p className="text-gray-400">Select a template to start building your professional story.</p>
+                <div className="mt-4 text-xs text-slate-500">
+                    Template {currentIndex + 1} of {templates.length}
+                </div>
             </motion.div>
 
-            <div className="relative w-full max-w-5xl h-[800px] flex items-center justify-center overflow-visible">
-                <AnimatePresence mode="wait">
+            <div className="relative w-full max-w-5xl h-[650px] md:h-[750px] flex items-center justify-center overflow-visible">
+                <AnimatePresence>
                     {templates.map((template, index) => {
                         const isCenter = index === currentIndex;
                         const isLeft = index === (currentIndex - 1 + templates.length) % templates.length;
@@ -150,12 +127,12 @@ export default function TemplateSelection() {
                                 animate={{
                                     opacity: isCenter ? 1 : 0.5,
                                     scale: isCenter ? 1 : 0.8,
-                                    x: isCenter ? 0 : isLeft ? -400 : 400,
-                                    rotateY: isCenter ? 0 : isLeft ? 30 : -30,
+                                    x: isCenter ? 0 : isLeft ? -350 : 350,
+                                    rotateY: isCenter ? 0 : isLeft ? 25 : -25,
                                     zIndex: isCenter ? 10 : 0,
                                 }}
-                                transition={{ duration: 0.6, ease: "circOut" }}
-                                className="absolute w-[350px] md:w-[450px]"
+                                transition={{ duration: 0.5, ease: "circOut" }}
+                                className="absolute w-[320px] md:w-[440px]"
                             >
                                 <div className="glass-dark rounded-3xl overflow-hidden group cursor-pointer border border-white/10 hover:border-blue-500/50 transition-colors shadow-2xl">
                                     <div className="aspect-[3/4] overflow-hidden relative">
@@ -169,7 +146,7 @@ export default function TemplateSelection() {
                                                     (e.target as HTMLImageElement).src = template.externalImage;
                                                 }}
                                             />
-                                            {/* Dynamic Theme Overlay - lighter and pointer-none */}
+                                            {/* Dynamic Theme Overlay */}
                                             <div
                                                 className="absolute inset-0 bg-white opacity-[0.03] pointer-events-none"
                                             />
@@ -187,7 +164,7 @@ export default function TemplateSelection() {
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={() => handleSelect(template.id)}
-                                                    className="px-8 py-3 bg-white text-black rounded-xl font-bold flex items-center gap-2"
+                                                    className="px-8 py-3 bg-white text-black rounded-xl font-bold flex items-center gap-2 shadow-2xl"
                                                 >
                                                     Use Template <Check className="w-5 h-5" />
                                                 </motion.button>
@@ -203,7 +180,7 @@ export default function TemplateSelection() {
                                             ))}
                                         </div>
                                         <h3 className="text-xl font-bold text-white mb-2">{template.name}</h3>
-                                        <p className="text-sm text-gray-500">{template.description}</p>
+                                        <p className="text-sm text-gray-400">{template.description}</p>
                                     </div>
                                 </div>
                             </motion.div>
@@ -211,16 +188,19 @@ export default function TemplateSelection() {
                     })}
                 </AnimatePresence>
 
-                <div className="absolute bottom-10 flex gap-4 z-20">
+                {/* Left / Right Carousel Controls */}
+                <div className="absolute -bottom-4 md:bottom-6 flex gap-4 z-20">
                     <button
                         onClick={handlePrev}
-                        className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors"
+                        aria-label="Previous template"
+                        className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/15 transition-colors border border-white/10 text-white"
                     >
                         <ChevronLeft className="w-6 h-6" />
                     </button>
                     <button
                         onClick={handleNext}
-                        className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors"
+                        aria-label="Next template"
+                        className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/15 transition-colors border border-white/10 text-white"
                     >
                         <ChevronRight className="w-6 h-6" />
                     </button>

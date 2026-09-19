@@ -1,21 +1,48 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import ResumePreview from "@/components/builder/ResumePreview";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    User,
+    FileText,
+    Briefcase,
+    GraduationCap,
+    Cpu,
+    FolderGit2,
+    Award,
+    Layers,
+    Sparkles,
+    Printer,
+    Download,
+    Undo2,
+    Redo2,
+    Home,
+    Layout,
+    Check,
+    FolderKanban,
+    Settings,
+    FileSearch,
+    Eye,
+    Edit3,
+} from "lucide-react";
+import { useResumeStore } from "@/lib/store";
 import PersonalInfoForm from "@/components/builder/forms/PersonalInfoForm";
 import SummaryForm from "@/components/builder/forms/SummaryForm";
 import ExperienceForm from "@/components/builder/forms/ExperienceForm";
 import EducationForm from "@/components/builder/forms/EducationForm";
 import SkillsForm from "@/components/builder/forms/SkillsForm";
 import ProjectsForm from "@/components/builder/forms/ProjectsForm";
-import { useState } from "react";
-import { User, FileText, Briefcase, GraduationCap, Cpu, FolderGit2, Wand2, Download, Check, Home, Layout } from "lucide-react";
-import AiAssistant from "@/components/builder/AiAssistant";
+import CertificationsForm from "@/components/builder/forms/CertificationsForm";
+import CustomSectionsForm from "@/components/builder/forms/CustomSectionsForm";
+import ResumePreview from "@/components/builder/ResumePreview";
 import AtsScoreCard from "@/components/builder/AtsScoreCard";
-import { useResumeStore } from "@/lib/store";
-import { AI_PROMPTS } from "@/lib/ai-prompts";
-import { exportToPdf } from "@/utils/export";
+import AiAssistantModal from "@/components/ai/AiAssistantModal";
+import JobDescriptionModal from "@/components/ats/JobDescriptionModal";
+import ResumeManagerModal from "@/components/builder/ResumeManagerModal";
+import SettingsModal from "@/components/builder/SettingsModal";
+import CommandPalette from "@/components/builder/CommandPalette";
+import { printResume, exportToPdf } from "@/utils/export";
 
 const tabs = [
     { id: "personal", label: "Personal", icon: User },
@@ -24,265 +51,298 @@ const tabs = [
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "skills", label: "Skills", icon: Cpu },
     { id: "projects", label: "Projects", icon: FolderGit2 },
+    { id: "certifications", label: "Certs", icon: Award },
+    { id: "custom", label: "More", icon: Layers },
 ];
 
 export default function BuilderPage() {
+    const [mounted, setMounted] = useState(false);
     const [activeTab, setActiveTab] = useState("personal");
-    const { isAiOpen, setAiOpen } = useResumeStore();
+    const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
     const [isExporting, setIsExporting] = useState(false);
-    const [isAiLoading, setIsAiLoading] = useState(false);
-    const { resumeData, updateSummary, updateExperience } = useResumeStore();
 
-    const handleAiAction = async (action: string) => {
-        // Always get the latest state from the store to avoid stale closures
-        const currentData = useResumeStore.getState().resumeData;
-        setIsAiLoading(true);
-        try {
-            let prompt = "";
-            let type = "text";
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
-            if (action === "summary") {
-                if (!currentData.personalInfo.jobTitle) {
-                    alert("Please enter a Job Title in the Personal section first so the AI knows what to write about!");
-                    setIsAiLoading(false);
-                    return;
-                }
-                const experienceText = currentData.experience.map(e => e.description).join(". ");
-                prompt = AI_PROMPTS.summary(currentData.personalInfo.jobTitle, experienceText);
-            } else if (action === "bullets") {
-                const recentExp = currentData.experience[0];
-                if (!recentExp || !recentExp.description) {
-                    alert("Please add an experience entry with a description first to use 'Impact Bullet points'.");
-                    setIsAiLoading(false);
-                    return;
-                }
-                prompt = AI_PROMPTS.improveBullet(recentExp.description);
-            } else if (action === "keywords" || action === "scoring") {
-                if (!currentData.personalInfo.jobTitle) {
-                    alert("Please enter a Job Title first for accurate scoring and optimization.");
-                    setIsAiLoading(false);
-                    return;
-                }
-                if (currentData.experience.length === 0) {
-                    alert("Please add at least one experience entry to calculate a professional score.");
-                    setIsAiLoading(false);
-                    return;
-                }
+    const resumeData = useResumeStore((state) => state.resumeData);
+    const resumes = useResumeStore((state) => state.resumes);
+    const activeResumeId = useResumeStore((state) => state.activeResumeId);
+    const switchResume = useResumeStore((state) => state.switchResume);
+    const saveStatus = useResumeStore((state) => state.saveStatus);
+    const lastSaved = useResumeStore((state) => state.lastSaved);
+    const undo = useResumeStore((state) => state.undo);
+    const redo = useResumeStore((state) => state.redo);
+    const canUndo = useResumeStore((state) => state.canUndo);
+    const canRedo = useResumeStore((state) => state.canRedo);
 
-                const fullContent = `
-                    Role: ${currentData.personalInfo.jobTitle}
-                    Experience: ${currentData.experience.map(e => `${e.position} at ${e.company}: ${e.description}`).join("\n")}
-                    Skills: ${currentData.skills.map(s => s.name).join(", ")}
-                `;
-                prompt = action === "scoring" ? AI_PROMPTS.score(fullContent) : AI_PROMPTS.tailor("modern tech industry standards", fullContent);
-                type = "json";
+    const setAiOpen = useResumeStore((state) => state.setAiOpen);
+    const setJdModalOpen = useResumeStore((state) => state.setJdModalOpen);
+    const setManagerOpen = useResumeStore((state) => state.setManagerOpen);
+    const setSettingsOpen = useResumeStore((state) => state.setSettingsOpen);
+    const setCommandPaletteOpen = useResumeStore((state) => state.setCommandPaletteOpen);
+
+    // Global keyboard shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+P, Ctrl+K)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const isModifier = e.ctrlKey || e.metaKey;
+            if (!isModifier) return;
+
+            if (e.key.toLowerCase() === "z" && !e.shiftKey) {
+                e.preventDefault();
+                if (useResumeStore.getState().canUndo) {
+                    useResumeStore.getState().undo();
+                }
+            } else if ((e.key.toLowerCase() === "y") || (e.key.toLowerCase() === "z" && e.shiftKey)) {
+                e.preventDefault();
+                if (useResumeStore.getState().canRedo) {
+                    useResumeStore.getState().redo();
+                }
             }
+        };
 
-            if (!prompt) return;
-
-            const res = await fetch("/api/ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt, type }),
-            });
-
-            if (!res.ok) {
-                // If API is not found (Static GitHub Pages), provide a helpful Demo Response
-                console.warn("AI API not found. Using Demo Fallback.");
-                const mockResults: Record<string, string> = {
-                    summary: "Experienced professional with a strong background in developing scalable web applications. Expert in React, Node.js, and cloud architecture, with a proven track record of optimizing performance and leading high-performing technical teams.",
-                    bullets: "• Spearheaded the development of a real-time analytics dashboard, increasing user engagement by 45%.\n• Optimized database queries, reducing API latency by 300ms for high-traffic endpoints.\n• Led a cross-functional team of 8 engineers to deliver a mission-critical e-commerce migration ahead of schedule.",
-                    scoring: '{"score": 85, "ats_feedback": "Excellent structure and keyword usage.", "suggestions": ["Add more quantified metrics", "Include modern certifications"]}'
-                };
-
-                const result = mockResults[action] || "This AI feature is currently in Demo mode on GitHub Pages. To use full live AI, host on a platform with server-side support like Vercel!";
-
-                // Simulate net delay
-                await new Promise(r => setTimeout(r, 800));
-
-                if (action === "summary") updateSummary(result);
-                else if (action === "bullets") {
-                    const recentExp = resumeData.experience[0];
-                    if (recentExp) updateExperience(recentExp.id, { description: result });
-                } else if (action === "scoring") {
-                    const parsed = JSON.parse(result);
-                    alert(`Demo Resume Score: ${parsed.score}/100\n\nATS Feedback: ${parsed.ats_feedback}\n\nTop Suggestions:\n${parsed.suggestions.join("\n")}`);
-                }
-                setAiOpen(false);
-                return;
-            }
-
-            const data = await res.json();
-            if (data.result) {
-                if (action === "summary") {
-                    updateSummary(data.result);
-                } else if (action === "bullets") {
-                    const recentExp = resumeData.experience[0];
-                    if (recentExp) {
-                        updateExperience(recentExp.id, { description: data.result });
-                    }
-                } else if (action === "keywords" || action === "scoring") {
-                    try {
-                        // More robust JSON extraction: find the first { and last }
-                        const jsonMatch = data.result.match(/\{[\s\S]*\}/);
-                        const cleanJson = jsonMatch ? jsonMatch[0] : data.result;
-                        const parsed = JSON.parse(cleanJson);
-                        if (action === "scoring") {
-                            alert(`Resume Score: ${parsed.score}/100\n\nATS Feedback: ${parsed.ats_feedback}\n\nTop Suggestions:\n${parsed.suggestions.join("\n")}`);
-                        } else {
-                            alert(`Keyword Optimization Suggestions:\n\n${Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join("\n\n")}`);
-                        }
-                    } catch (e) {
-                        // If parsing fails, just show the raw response
-                        alert(`AI Suggestions:\n\n${data.result}`);
-                    }
-                }
-                setAiOpen(false);
-            }
-            else if (data.error) {
-                alert(`AI Error: ${data.error}`);
-            }
-        } catch (error) {
-            console.error("AI Generation failed", error);
-            alert("Failed to connect to AI service. Please check your internet and API key.");
-        } finally {
-            setIsAiLoading(false);
-        }
-    };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
     const handleExport = async () => {
         setIsExporting(true);
-        try {
-            await exportToPdf("resume-preview-root", `resume-${resumeData.personalInfo.fullName || "builder"}.pdf`);
-        } finally {
-            setIsExporting(false);
-        }
+        const name = (resumeData.personalInfo.fullName || "resume").replace(/\s+/g, "_");
+        await exportToPdf("resume-preview-root", `${name}_resume.pdf`, resumeData.pageSettings?.format);
+        setIsExporting(false);
     };
 
     return (
-        <div className="flex h-screen bg-black overflow-hidden">
-            {/* Left Side: Forms */}
-            <div className="w-full lg:w-1/2 flex flex-col h-full border-r border-white/5">
-                <div className="p-6 border-b border-white/5 bg-black/50 backdrop-blur-xl flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">R</span>
-                        </div>
-                        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                            Resume Artist
-                        </h1>
-                        <div className="flex items-center gap-4 ml-6 border-l border-white/10 pl-6">
-                            <Link href="/" className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">
+        <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans">
+            {/* LEFT / MAIN COLUMN: TOOLBAR & FORMS */}
+            <div
+                className={`w-full lg:w-1/2 flex flex-col h-full border-r border-slate-800 transition-all ${mobileView === "preview" ? "hidden lg:flex" : "flex"
+                    }`}
+            >
+                {/* Header Bar */}
+                <header className="p-3.5 sm:px-6 border-b border-slate-800 bg-slate-900/70 backdrop-blur-md flex items-center justify-between gap-3 select-none">
+                    <div className="flex items-center gap-3">
+                        <Link href="/" className="flex items-center gap-2.5 group">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/20">
+                                <span className="text-white font-bold text-base">R</span>
+                            </div>
+                            <span className="font-bold text-base bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 hidden sm:inline">
+                                Resume Artist
+                            </span>
+                        </Link>
+
+                        <div className="hidden lg:flex items-center gap-3 ml-2 border-l border-slate-800 pl-3">
+                            <Link href="/" className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">
                                 <Home className="w-3.5 h-3.5" />
                                 <span>Home</span>
                             </Link>
-                            <Link href="/templates" className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">
+                            <Link href="/templates" className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">
                                 <Layout className="w-3.5 h-3.5" />
                                 <span>Templates</span>
                             </Link>
                         </div>
+
+                        {/* Resume Selector Dropdown */}
+                        <div className="flex items-center gap-1.5">
+                            <select
+                                value={activeResumeId}
+                                onChange={(e) => switchResume(e.target.value)}
+                                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs font-medium text-slate-200 focus:outline-none focus:border-blue-500 max-w-[150px] sm:max-w-[200px] truncate"
+                            >
+                                {Object.values(resumes).map((res) => (
+                                    <option key={res.id} value={res.id}>
+                                        {res.title || "Untitled Resume"}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                onClick={() => setManagerOpen(true)}
+                                title="Manage Resumes"
+                                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                            >
+                                <FolderKanban className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-3">
+
+                    {/* Toolbar Actions */}
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        {/* Autosave Pill */}
+                        <div className="hidden md:flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-800/60 border border-slate-800 text-[11px] text-slate-400">
+                            <Check className="w-3 h-3 text-emerald-400" />
+                            <span suppressHydrationWarning>
+                                {mounted && lastSaved ? `Saved ${lastSaved}` : "Auto-saved"}
+                            </span>
+                        </div>
+
+                        {/* Undo / Redo */}
+                        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+                            <button
+                                onClick={undo}
+                                disabled={!canUndo}
+                                title="Undo (Ctrl+Z)"
+                                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+                            >
+                                <Undo2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={redo}
+                                disabled={!canRedo}
+                                title="Redo (Ctrl+Y)"
+                                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
+                            >
+                                <Redo2 className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+
+                        {/* AI & ATS Triggers */}
                         <button
                             onClick={() => setAiOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600/10 text-blue-400 border border-blue-600/20 rounded-lg hover:bg-blue-600/20 transition-colors"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-blue-400 rounded-lg text-xs font-semibold transition-colors"
                         >
-                            <Wand2 className="w-4 h-4" />
-                            <span className="text-sm font-medium">AI Helper</span>
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">AI Helper</span>
                         </button>
-                        <button
-                            onClick={handleExport}
-                            disabled={isExporting}
-                            className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
-                        >
-                            {isExporting ? <span className="animate-spin">◌</span> : <Download className="w-4 h-4" />}
-                            <span className="text-sm font-medium">{isExporting ? "Exporting..." : "Export"}</span>
-                        </button>
-                    </div>
-                </div>
 
-                <div className="flex bg-white/5 p-1 mx-6 mt-6 rounded-xl">
+                        <button
+                            onClick={() => setJdModalOpen(true)}
+                            title="Job Description & ATS Matcher"
+                            className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg text-xs transition-colors"
+                        >
+                            <FileSearch className="w-4 h-4" />
+                        </button>
+
+                        <button
+                            onClick={() => setSettingsOpen(true)}
+                            title="Settings & Privacy"
+                            className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg text-xs transition-colors"
+                        >
+                            <Settings className="w-4 h-4" />
+                        </button>
+
+                        <Link
+                            href="/templates"
+                            className="p-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg text-xs transition-colors"
+                            title="Browse Templates"
+                        >
+                            <Layout className="w-4 h-4" />
+                        </Link>
+                    </div>
+                </header>
+
+                {/* Section Navigation Tabs */}
+                <div className="flex bg-slate-900/60 border-b border-slate-800/80 p-1.5 gap-1 overflow-x-auto select-none scrollbar-none">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-lg transition-all ${activeTab === tab.id
-                                ? "bg-white/10 text-white shadow-lg"
-                                : "text-gray-500 hover:text-gray-300"
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${activeTab === tab.id
+                                ? "bg-slate-800 text-white shadow-sm"
+                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                                 }`}
                         >
-                            <tab.icon className="w-4 h-4" />
-                            <span className="text-[10px] font-medium uppercase tracking-wider">{tab.label}</span>
+                            <tab.icon className="w-3.5 h-3.5" />
+                            <span>{tab.label}</span>
                         </button>
                     ))}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.3 }}
-                        className="max-w-xl mx-auto pb-24"
-                    >
-                        {activeTab === "personal" && <PersonalInfoForm />}
-                        {activeTab === "summary" && <SummaryForm />}
-                        {activeTab === "experience" && <ExperienceForm />}
-                        {activeTab === "education" && <EducationForm />}
-                        {activeTab === "skills" && <SkillsForm />}
-                        {activeTab === "projects" && <ProjectsForm />}
+                {/* Forms Viewport */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
+                    <div className="max-w-xl mx-auto pb-20">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.15 }}
+                            >
+                                {activeTab === "personal" && <PersonalInfoForm />}
+                                {activeTab === "summary" && <SummaryForm />}
+                                {activeTab === "experience" && <ExperienceForm />}
+                                {activeTab === "education" && <EducationForm />}
+                                {activeTab === "skills" && <SkillsForm />}
+                                {activeTab === "projects" && <ProjectsForm />}
+                                {activeTab === "certifications" && <CertificationsForm />}
+                                {activeTab === "custom" && <CustomSectionsForm />}
+                            </motion.div>
+                        </AnimatePresence>
 
-                        <div className="mt-12 flex items-center justify-between border-t border-white/5 pt-8">
+                        {/* Step Navigation Bar */}
+                        <div className="mt-10 flex items-center justify-between border-t border-slate-800 pt-6">
                             <button
+                                type="button"
                                 onClick={() => {
-                                    const currentIndex = tabs.findIndex(t => t.id === activeTab);
-                                    if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1].id);
+                                    const idx = tabs.findIndex((t) => t.id === activeTab);
+                                    if (idx > 0) setActiveTab(tabs[idx - 1].id);
                                 }}
                                 disabled={activeTab === tabs[0].id}
-                                className="px-6 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                                Back
+                                ← Previous
                             </button>
+
                             <button
+                                type="button"
                                 onClick={() => {
-                                    const currentIndex = tabs.findIndex(t => t.id === activeTab);
-                                    if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1].id);
+                                    const idx = tabs.findIndex((t) => t.id === activeTab);
+                                    if (idx < tabs.length - 1) setActiveTab(tabs[idx + 1].id);
                                 }}
                                 disabled={activeTab === tabs[tabs.length - 1].id}
-                                className="px-8 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-blue-600/20"
                             >
-                                Next
+                                Next Step →
                             </button>
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
-            {/* Right Side: Preview */}
-            <div className="hidden lg:flex lg:w-1/2 bg-[#050505] items-center justify-center p-8 overflow-hidden relative">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(37,99,235,0.08)_0%,rgba(0,0,0,1)_60%)] pointer-events-none" />
-                <div className="absolute top-10 right-10 flex flex-col gap-4 text-center">
-                    <div className="glass-dark p-4 rounded-2xl animate-float">
-                        <span className="text-xs text-gray-500 uppercase block mb-1">Status</span>
-                        <span className="text-green-400 text-sm font-bold flex items-center gap-2 justify-center">
-                            <Check className="w-4 h-4" /> Live Preview
-                        </span>
-                    </div>
+            {/* RIGHT COLUMN: PREVIEW & ATS STATUS */}
+            <div
+                className={`w-full lg:w-1/2 flex-col h-full bg-slate-950 relative overflow-hidden ${mobileView === "preview" ? "flex" : "hidden lg:flex"
+                    }`}
+            >
+                {/* Floating ATS Score Card in Desktop Preview */}
+                <div id="ats-card-container" className="no-print absolute top-14 right-4 z-30">
                     <AtsScoreCard />
                 </div>
+
                 <ResumePreview />
             </div>
 
-            <AnimatePresence>
-                {isAiOpen && (
-                    <AiAssistant
-                        onClose={() => setAiOpen(false)}
-                        onAction={handleAiAction}
-                        loading={isAiLoading}
-                    />
-                )}
-            </AnimatePresence>
+            {/* MOBILE VIEW TOGGLE SWITCHER (Floating bottom bar on small screens) */}
+            <div className="no-print fixed bottom-4 left-1/2 -translate-x-1/2 lg:hidden z-40 bg-slate-900/90 border border-slate-800 backdrop-blur-md rounded-full p-1 shadow-2xl flex items-center gap-1">
+                <button
+                    onClick={() => setMobileView("edit")}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${mobileView === "edit"
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                        : "text-slate-400 hover:text-white"
+                        }`}
+                >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    Editor
+                </button>
+                <button
+                    onClick={() => setMobileView("preview")}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${mobileView === "preview"
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                        : "text-slate-400 hover:text-white"
+                        }`}
+                >
+                    <Eye className="w-3.5 h-3.5" />
+                    Preview
+                </button>
+            </div>
+
+            {/* MODALS */}
+            <AiAssistantModal />
+            <JobDescriptionModal />
+            <ResumeManagerModal />
+            <SettingsModal />
+            <CommandPalette />
         </div>
     );
 }
